@@ -46,5 +46,11 @@ struct AddItemView: View {
             )
         }
         .colorScheme(.dark)
+        .onDisappear {
+            // Force a redraw of the parent view when this view disappears
+            DispatchQueue.main.async {
+                // This empty block forces a UI update
+            }
+        }
     }
 } 

@@ -5,6 +5,8 @@ struct DialView: View {
     @State private var rotationAngle: Double = 0
     @State private var previousDragOffset: CGSize = .zero
     @State private var isAtBoundary: Bool = false
+    @State private var previousItemCount: Int = 0
+    @State private var lastRotationAngle: Double = 0
     
     // Constants for wheel appearance
     private let wheelRadius: CGFloat = 350 // Radius for the circular path
@@ -37,6 +39,21 @@ struct DialView: View {
                                     scrollToNextItem()
                                 }
                             }
+                    }
+                }
+                
+                // Delete button for the active item
+                if !items.isEmpty {
+                    VStack {
+                        Spacer()
+                        Button(action: {
+                            deleteActiveItem()
+                        }) {
+                            Image(systemName: "trash.circle.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.red)
+                        }
+                        .padding(.bottom, 100)
                     }
                 }
             }
@@ -81,8 +98,50 @@ struct DialView: View {
                         } else {
                             snapToNearestItem()
                         }
+                        
+                        // Store the last rotation angle
+                        lastRotationAngle = rotationAngle
                     }
             )
+            .onAppear {
+                // Initialize previousItemCount
+                previousItemCount = items.count
+                
+                // Set initial rotation to center the list
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    rotationAngle = Double.pi
+                    lastRotationAngle = rotationAngle
+                }
+            }
+            .onChange(of: items.count) { newCount, _ in
+                // If items were added, adjust rotation to maintain position
+                if newCount > previousItemCount {
+                    // Restore the previous rotation angle to prevent scrolling
+                    rotationAngle = lastRotationAngle
+                } else if newCount < previousItemCount {
+                    // Item was deleted, adjust rotation if needed
+                    snapToNearestItem()
+                }
+                previousItemCount = newCount
+            }
+        }
+    }
+    
+    // Delete the active item
+    private func deleteActiveItem() {
+        // Find the active item
+        for (index, _) in items.enumerated() {
+            let angle = Double(index) * itemSpacing + rotationAngle
+            if isActiveItem(angle) {
+                // Use the reversed index to match the display order
+                let reversedIndex = items.count - 1 - index
+                
+                // Remove the item
+                withAnimation {
+                    items.remove(at: reversedIndex)
+                }
+                break
+            }
         }
     }
     
