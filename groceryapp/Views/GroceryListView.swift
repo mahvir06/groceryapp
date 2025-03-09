@@ -10,45 +10,10 @@ struct GroceryListView: View {
             Color.black.edgesIgnoringSafeArea(.all)
             
             VStack {
-                // Header with navigation
-                HStack {
-                    Button(action: {
-                        // Back action
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                        .foregroundColor(.yellow)
-                        .font(.title3)
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        // More options
-                    }) {
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(.yellow)
-                            .font(.title2)
-                    }
-                    
-                    Spacer().frame(width: 20)
-                    
-                    Button(action: {
-                        // Done action
-                    }) {
-                        Text("Done")
-                            .foregroundColor(.yellow)
-                            .font(.title3)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 10)
-                
                 // Dial view
                 DialView(items: $items)
-                    .frame(height: UIScreen.main.bounds.height * 0.8)
+                    .frame(height: UIScreen.main.bounds.height * 0.9)
+                    .id(items.count)
                 
                 Spacer()
                 
@@ -56,28 +21,33 @@ struct GroceryListView: View {
                 Button(action: {
                     showingAddItem = true
                 }) {
-                    Image(systemName: "plus")
-                        .resizable()
-                        .frame(width: 20, height: 20)
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 50))
                         .foregroundColor(.yellow)
-                        .padding(15)
-                        .background(Circle().stroke(Color.yellow, lineWidth: 2))
                 }
-                .padding(.bottom, 30)
+                .padding(.bottom, 20)
             }
             .sheet(isPresented: $showingAddItem) {
                 AddItemView { itemName in
-                    addItem(itemName)
+                    withAnimation(nil) {
+                        let newItem = GroceryItem(name: itemName)
+                        items.append(newItem)
+                        saveItems()
+                    }
                 }
             }
-            .onAppear(perform: loadItems)
+        }
+        .onAppear {
+            loadItems()
         }
     }
     
     func addItem(_ name: String) {
-        let item = GroceryItem(name: name)
-        items.append(item)
-        saveItems()
+        withAnimation(nil) {
+            let item = GroceryItem(name: name)
+            items.append(item)
+            saveItems()
+        }
     }
     
     func loadItems() {
